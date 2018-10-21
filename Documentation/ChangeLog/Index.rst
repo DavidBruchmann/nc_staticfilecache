@@ -1,6 +1,30 @@
 ChangeLog
 ---------
 
+2015-08-20 Tim Lochmüller <tim@fruit-lab.de>
+
+- #68473 Fix compatiblity bug for 7.x
+- Prepare Release 3.4.1
+
+2015-07-13 Tim Lochmüller <tim@fruit-lab.de>
+
+- Prepare Release 3.4.0
+- Set TYPO3 compatibility to 6.2.x - 7.x.x
+
+2015-07-10 Tim Lochmüller <tim@fruit-lab.de>
+
+- [!!!] Add the scheme/protocol to the Cache path and to the htaccess rules file
+- Migrate teh gzip htaccess and the plain htaccess to one file. If you do not use gzip, you just have to comment out one line
+- Remove the dummy htaccess file and migrate them to the documentation file
+- Add a security rule to prevent direct calls of static cache entries
+- Remove the ValidProtocol Rule
+- Fix https://forge.typo3.org/issues/66842
+
+2015-06-17 Tim Lochmüller <tim@fruit-lab.de>
+
+- Fix https://forge.typo3.org/issues/67373
+- Fix https://forge.typo3.org/issues/67526
+
 2015-05-08 Tim Lochmüller <tim@fruit-lab.de>
 
 - Prepare Release 3.3.1
