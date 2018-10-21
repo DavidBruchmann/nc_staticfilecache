@@ -10,6 +10,9 @@ These Versions have been downloaded here:
  - https://extensions.typo3.org/extension/nc_staticfilecache/  
  - https://github.com/TYPO3-extensions/nc_staticfilecache  
 
+Version 4.0.0 has been provided by Christopher Kaster:
+ - https://github.com/atomicptr/nc_staticfilecache
+
 The versions provided here are copies but versioned and tagged with git,
 with this additional text-file `README.md` and **composer-support**.  
 
@@ -21,6 +24,10 @@ composer require wdb/nc_staticfilecache
 Versions
 --------
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+4.0.0 / stable  
+Aug 28, 2017	
+ - Compatibility for TYPO3 version 8.7. Thank's to Christopher Kaster!
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 3.6.0 / stable  
 March 23, 2016	
  - Now requires PHP 5.5 or higher, due to many code cleanups incl. PSR-2.  
