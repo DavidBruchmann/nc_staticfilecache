@@ -1,11 +1,54 @@
 ChangeLog
-^^^^^^^^^
+---------
 
+2015-04-28 Klaus Bitto <klaus@netcreators.nl>
 
-2015-04-16  Klaus Bitto <klaus@netcreators.nl>
+- Release of v3.2.0 to TER. Thanks to Tim Lochmüller for his extensive work.
 
-- Release of v3.0.0 for TYPO3 6.2.x - 7.1.x to TER.
-  Thanks to the contributors Tim Lochmüller and Jürgen Kußmann!
+2015-04-22 Tim Lochmüller <tim@fruit-lab.de>
+
+- Start to migrate the DB structure to the TYPO3 Caching framework
+- Add collectGarbage to CommandController
+- Remove "removeCacheDirectory" - files are deleted via CF now
+- Migrate one deleteStaticCacheDirectory to CF
+- Reduce the load of the CF frontend
+- Fix the order of the CF calls
+- [!!!] Remove the handling of 'dirty' cache entries. We switch to the CF and dirty entries are expired ones.
+- Fix flush cache
+- Delete cache via caching framework
+- Move the creation of the htaccess to the StaticFileBackend
+- Move the .htaccess content to a separate template file
+- Move Backend module to a separate template file (partly)
+- StaticFileCache.php Singleton
+- Split up the StaticFileBackend into General/Abstract and File related functions
+- Remove old cacheDir variable in StaticFileCache class
+- Update PhpDoc comments
+- Move more HTML to the templates of the Backend module
+- removed unused function getContentObject
+- Integration SFC Backend functions for the cache
+- [!!!] Migrate the backend module and all functions to the new Caching Framework mechanism
+- Migrate one manually clear cache to the core mechanism, by tagging the pages with the right pageId_X tag
+- Remove old functions (more migration to CF)
+- Move LogNoCache to separate class
+- Cleanup the clearCachePostProc function
+
+2015-04-20 Tim Lochmüller <tim@fruit-lab.de>
+
+- Migration of the documentation to basic RestructuredText
+
+2015-04-17 Tim Lochmüller <tim@fruit-lab.de>
+
+- Fix #6648 The explanation database table field should be emptied while an update
+- Fix #42734 recreateURI() should keep realurl encoded parameter
+- Migration first documentation blocks
+- Use the caching framework for creating the cache files
+- Fix the backend module for the new Configuration class
+- Feature #9510 Add the expiration date to the html footer comment (configuration strftime should just the date format. "strftime" is used for both dates now)
+- Fix #56519 Gzipped output broken when compressionLevel is set to 0
+
+2015-04-16 Klaus Bitto <klaus@netcreators.nl>
+
+- Release of v3.0.0 for TYPO3 6.2.x - 7.1.x to TER. Thanks to the contributors Tim Lochmüller and Jürgen Kußmann!
 
 2015-04-16  Tim Lochmüller <tim@fruit-lab.de>
 
@@ -22,6 +65,7 @@ ChangeLog
 - Fix #65700 Static File Cache module not working correctly on latest TYPO3 7.1
 - Increase compatibility to 6.2.x - 7.1.x
 - Fix #64769 Enable HTTPS caching impossible
+- Release of v3.0.0 to TER
 
 2015-04-15  Tim Lochmüller <tim@fruit-lab.de>
 
@@ -242,7 +286,7 @@ ChangeLog
 
 2009-05-08  Oliver Hader  <oliver@typo3.org>
 
-!!!- Added feature: Changed database table to use InnoDB engine
+- Added feature: Changed database table to use InnoDB engine
 - Follow-up to feature #2598: Added missing 'isdirty' field to SQL definitions
 - Follow-up to feature #2598: Added new CLI task 'processDirtyPages' to process elements marked as dirty
 - Follow-up to feature #2598: Set 'isdirty' flag zero when database element gets updated
