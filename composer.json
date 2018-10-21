@@ -1,0 +1,37 @@
+{
+	"name": "wdb/nc_staticfilecache",
+	"type": "typo3-cms-extension",
+	"description": "Transparent static file cache solution using mod_rewrite and mod_expires. Increase response times for static pages by a factor of 230!!",
+	"keywords": [
+		"typo3",
+		"TYPO3 CMS",
+        "extension",
+		"filecache",
+		"cache"
+	],
+	"homepage": "https://extensions.typo3.org/extension/nc_staticfilecache/",
+	"authors": [
+		{
+			"name": "Static File Cache team",
+            "homepage": "https://netcreators.com",
+            "email": "extensions@netcreators.com"
+		},
+		{
+			"name": "Michiel Roos",
+            "homepage": "https://netcreators.com",
+            "email": "extensions@netcreators.com"
+		},
+		{
+			"name": "Tim Lochmüller",
+            "homepage": "https://netcreators.com",
+            "email": "extensions@netcreators.com"
+		}
+	],
+	"replace": {
+		"nc_staticfilecache": "self.version",
+		"wdb/nc_staticfilecache": "self.version"
+	},
+    "suggest": {
+        "typo3/cms": ""
+    }
+}
