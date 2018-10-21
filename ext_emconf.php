@@ -3,7 +3,7 @@
 ########################################################################
 # Extension Manager/Repository config file for ext "nc_staticfilecache".
 #
-# Auto generated 12-08-2015 21:27
+# Auto generated 23-08-2015 04:59
 #
 # Manual updates:
 # Only the data in the array - everything else is removed by next
@@ -15,7 +15,7 @@ $EM_CONF[$_EXTKEY] = array(
 	'description' => 'Transparent static file cache solution using mod_rewrite and mod_expires. Increase response times for static pages by a factor of 230!',
 	'category' => 'fe',
 	'shy' => 0,
-	'version' => '2.3.0',
+	'version' => '2.3.1',
 	'dependencies' => '',
 	'conflicts' => '',
 	'priority' => '',
