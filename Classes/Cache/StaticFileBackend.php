@@ -88,18 +88,19 @@ class StaticFileBackend extends AbstractBackend
      */
     protected function writeHtAccessFile($originalFileName, $lifetime)
     {
-        if ($this->configuration->get('sendCacheControlHeader')) {
+        if ($this->configuration->get('sendCacheControlHeader') || $this->configuration->get('sendCacheControlHeaderRedirectAfterCacheTimeout')) {
             $fileName = PathUtility::pathinfo($originalFileName, PATHINFO_DIRNAME) . '/.htaccess';
             $accessTimeout = $this->configuration->get('htaccessTimeout');
             $lifetime = $accessTimeout ? $accessTimeout : $this->getRealLifetime($lifetime);
 
             /** @var StandaloneView $renderer */
-            $renderer = GeneralUtility::makeInstance('TYPO3\\CMS\\Fluid\\View\\StandaloneView');
+            $renderer = GeneralUtility::makeInstance(StandaloneView::class);
             $renderer->setTemplatePathAndFilename(GeneralUtility::getFileAbsFileName('EXT:nc_staticfilecache/Resources/Private/Templates/Htaccess.html'));
             $renderer->assignMultiple([
                 'mode' => $accessTimeout ? 'A' : 'M',
                 'lifetime' => $lifetime,
                 'expires' => time() + $lifetime,
+                'sendCacheControlHeader' => (bool)$this->configuration->get('sendCacheControlHeader'),
                 'sendCacheControlHeaderRedirectAfterCacheTimeout' => (bool)$this->configuration->get('sendCacheControlHeaderRedirectAfterCacheTimeout'),
             ]);
 
@@ -199,6 +200,10 @@ class StaticFileBackend extends AbstractBackend
      */
     public function flush()
     {
+        if ((boolean)$this->configuration->get('clearCacheForAllDomains') === false) {
+            $this->flushByTag('sfc_domain_' . str_replace('.', '_', GeneralUtility::getIndpEnv('TYPO3_HOST_ONLY')));
+            return;
+        }
         $absoluteCacheDir = GeneralUtility::getFileAbsFileName($this->cacheDirectory);
         if (is_dir($absoluteCacheDir)) {
             $tempAbsoluteCacheDir = rtrim($absoluteCacheDir, '/') . '_' . GeneralUtility::milliseconds() . '/';

@@ -12,7 +12,6 @@ use SFC\NcStaticfilecache\Cache\UriFrontend;
 use SFC\NcStaticfilecache\Utility\CacheUtility;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Core\Utility\MathUtility;
 use TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
 use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
@@ -56,7 +55,7 @@ class StaticFileCache implements SingletonInterface
      */
     public static function getInstance()
     {
-        return GeneralUtility::makeInstance('SFC\\NcStaticfilecache\\StaticFileCache');
+        return GeneralUtility::makeInstance(self::class);
     }
 
     /**
@@ -65,38 +64,8 @@ class StaticFileCache implements SingletonInterface
     public function __construct()
     {
         $this->cache = CacheUtility::getCache();
-        $this->signalDispatcher = GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\SignalSlot\\Dispatcher');
-        $this->configuration = GeneralUtility::makeInstance('SFC\\NcStaticfilecache\\Configuration');
-    }
-
-    /**
-     * Clear static file
-     *
-     * @param array $params array containing 'cacheCmd'
-     *
-     * @return void
-     */
-    public function clearStaticFile(&$params)
-    {
-        if (!isset($params['cacheCmd']) || !$params['cacheCmd']) {
-            return;
-        }
-        switch ($params['cacheCmd']) {
-            case 'all':
-            case 'pages':
-                if ((boolean)$this->configuration->get('clearCacheForAllDomains')) {
-                    $this->cache->flush();
-                } else {
-                    $this->cache->flushByTag('domain_' . str_replace('.', '_',
-                            GeneralUtility::getIndpEnv('TYPO3_HOST_ONLY')));
-                }
-                break;
-            default:
-                if (MathUtility::canBeInterpretedAsInteger($params['cacheCmd'])) {
-                    CacheUtility::clearByPageId($params['cacheCmd']);
-                }
-                break;
-        }
+        $this->signalDispatcher = GeneralUtility::makeInstance(Dispatcher::class);
+        $this->configuration = GeneralUtility::makeInstance(Configuration::class);
     }
 
     /**
@@ -120,13 +89,6 @@ class StaticFileCache implements SingletonInterface
         $preProcessArguments = $this->signalDispatcher->dispatch(__CLASS__, 'preProcess', $preProcessArguments);
         $uri = $preProcessArguments['uri'];
 
-        // don't continue if there is already an existing valid cache entry
-        // prevents overriding if a logged in user is checking the page in a second call
-        $previousCacheEntry = $this->cache->get($uri);
-        if (!count($previousCacheEntry['explanation']) && $previousCacheEntry['expires'] >= $GLOBALS['EXEC_TIME']) {
-            return;
-        }
-
         // cache rules
         $ruleArguments = [
             'frontendController' => $pObj,
@@ -139,10 +101,17 @@ class StaticFileCache implements SingletonInterface
 
         if (!$ruleArguments['skipProcessing']) {
 
-            $cacheTags = [
-                'pageId_' . $pObj->page['uid'],
-                'domain_' . str_replace('.', '_', parse_url($uri, PHP_URL_HOST)),
-            ];
+            // Don't continue if there is already an existing valid cache entry and we've got an invalid now.
+            // Prevents overriding if a logged in user is checking the page in a second call
+            // see https://forge.typo3.org/issues/67526
+            if (count($explanation) && $this->hasValidCacheEntry($uri)) {
+                return;
+            }
+
+            // The page tag pageId_NN is included in $pObj->pageCacheTags
+            $cacheTags = ObjectAccess::getProperty($pObj, 'pageCacheTags', true);
+            $cacheTags[] = 'sfc_pageId_' . $pObj->page['uid'];
+            $cacheTags[] = 'sfc_domain_' . str_replace('.', '_', parse_url($uri, PHP_URL_HOST));
 
             // This is supposed to have "&& !$pObj->beUserLogin" in there as well
             // This fsck's up the ctrl-shift-reload hack, so I pulled it out.
@@ -226,14 +195,31 @@ class StaticFileCache implements SingletonInterface
     {
         $objectManager = new ObjectManager();
         /** @var UriBuilder $uriBuilder */
-        $uriBuilder = $objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Web\\Routing\\UriBuilder');
+        $uriBuilder = $objectManager->get(UriBuilder::class);
         if (ObjectAccess::getProperty($uriBuilder, 'contentObject', true) === null) {
             // there are situations without a valid contentObject in the URI builder
             // prevent this situation by return the original request URI
             return $uri;
         }
-        return $uriBuilder->reset()
+        $url = $uriBuilder->reset()
             ->setAddQueryString(true)
             ->build();
+
+        return preg_replace('/https?:\/\/[^\/]+/is', '', $url);
+    }
+
+    /**
+     * Determines whether the given $uri has a valid cache entry.
+     *
+     * @param     string  $uri
+     *
+     * @return    bool    is available and valid
+     */
+    protected function hasValidCacheEntry($uri)
+    {
+        $entry = $this->cache->get($uri);
+        return ($entry !== null &&
+                count($entry['explanation']) === 0 &&
+                $entry['expires'] >= $GLOBALS['EXEC_TIME']);
     }
 }

@@ -45,7 +45,7 @@ class CacheModule extends AbstractFunctionModule
 
         // Initialize tree object:
         /* @var $tree BrowseTreeView */
-        $tree = GeneralUtility::makeInstance('TYPO3\\CMS\\Backend\\Tree\\View\\BrowseTreeView');
+        $tree = GeneralUtility::makeInstance(BrowseTreeView::class);
         $tree->makeHTML = 2;
         $tree->init();
 
@@ -83,8 +83,7 @@ class CacheModule extends AbstractFunctionModule
         $cache = CacheUtility::getCache();
 
         foreach ($tree->tree as $row) {
-
-            $cacheEntries = $cache->getByTag('pageId_' . $row['row']['uid']);
+            $cacheEntries = $cache->getByTag('sfc_pageId_' . $row['row']['uid']);
             if ($cacheEntries) {
                 $isFirst = true;
                 foreach ($cacheEntries as $identifier => $info) {
@@ -111,7 +110,7 @@ class CacheModule extends AbstractFunctionModule
         }
 
         /** @var StandaloneView $renderer */
-        $renderer = GeneralUtility::makeInstance('TYPO3\\CMS\\Fluid\\View\\StandaloneView');
+        $renderer = GeneralUtility::makeInstance(StandaloneView::class);
         $renderer->setTemplatePathAndFilename(GeneralUtility::getFileAbsFileName('EXT:nc_staticfilecache/Resources/Private/Templates/Module.html'));
         $renderer->assignMultiple([
             'requestUri' => GeneralUtility::getIndpEnv('REQUEST_URI'),
@@ -150,7 +149,6 @@ class CacheModule extends AbstractFunctionModule
     protected function processExpandCollapseLinks($content)
     {
         if (strpos($content, 'PM=') !== false && $this->pageId > 0) {
-
             $content = preg_replace('/(href=")([^"]+PM=[^"#]+)(#[^"]+)?(")/',
                 '${1}${2}&id=' . $this->pageId . '${3}${4}', $content);
         }

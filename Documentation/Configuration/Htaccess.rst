@@ -1,14 +1,7 @@
 htaccess file
 ^^^^^^^^^^^^^
 
-There are four example .htaccess configurations stored in the 'doc' directory. They are named:
-
-- gzip.htaccess – use if you enabled gzipping and use realurl or simulateStatic
-- plain.htaccess – use if you have not enabled gzipping and use realurl or simulateStatic
-
-The .htaccess files use an optimized rewrite configuration as is explained here: http://www.typofree.org/article/archive/2008/june/title/rethinking-the-realurl-mod-rewrite-rules/
-
-Here is a part of the gzip.realurl version:
+This is the base .htaccess configuration. Please take a look for the default variables (SFC_ROOT, SFC_GZIP) and read the comments carefully.
 
 .. code-block:: bash
 
@@ -65,10 +58,6 @@ Here is a part of the gzip.realurl version:
    # If you have logged out of the TYPO3 backend and are expecting to see cached pages but don't.
    # Please close this browser session first or remove the cookie manually or use another browser to hit your frontend.
    RewriteCond %{HTTP_COOKIE} !be_typo_user [NC]
-
-   # Check for Ctrl Shift reload
-   RewriteCond %{HTTP:Pragma} !no-cache
-   RewriteCond %{HTTP:Cache-Control} !no-cache
 
    # Rewrite the request to the static file.
    RewriteRule .* typo3temp/tx_ncstaticfilecache/%{ENV:SFC_PROTOCOL}/%{HTTP_HOST}%{ENV:SFC_URI}%{ENV:SFC_FILE}%{ENV:SFC_GZIP} [L]
