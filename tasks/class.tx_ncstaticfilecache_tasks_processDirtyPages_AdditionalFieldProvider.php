@@ -78,7 +78,11 @@ class tx_ncstaticfilecache_tasks_processDirtyPages_AdditionalFieldProvider imple
 	 * @return	boolean					True if validation was ok (or selected class is not relevant), false otherwise
 	 */
 	public function validateAdditionalFields(array &$submittedData, tx_scheduler_Module $schedulerModule) {
-		if ( t3lib_div::intval_positive($submittedData['itemLimit']) > 0 ) {
+		$itemLimit = class_exists('TYPO3\CMS\Core\Utility\MathUtility')
+			? \TYPO3\CMS\Core\Utility\MathUtility::convertToPositiveInteger($submittedData['itemLimit'])
+			: t3lib_div::intval_positive($submittedData['itemLimit']);
+
+		if ($itemLimit  > 0) {
 			return true;
 		} else {
 			$schedulerModule->addMessage('no valid limit given (positive number expected)', t3lib_FlashMessage::ERROR);
