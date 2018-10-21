@@ -31,17 +31,27 @@
  *
  *
  *
- *   46: class tx_ncstaticfilecache
- *   60:     function clearCachePostProc (&$params, &$pObj)
- *  154:     function clearStaticFile (&$_params)
- *  213:     function headerNoCache (&$params, $parent)
- *  230:     function insertPageIncache (&$pObj, &$timeOutTime)
- *  322:     function removeExpiredPages (&$pObj)
- *  345:     function rm ($dir)
+ *   56: class tx_ncstaticfilecache
+ *   70:     function clearCachePostProc (&$params, &$pObj)
+ *  164:     function clearStaticFile (&$_params)
+ *  219:     function getRecordForPageID($pid)
+ *  237:     function headerNoCache (&$params, $parent)
+ *  254:     function insertPageIncache (&$pObj, &$timeOutTime)
+ *  380:     function logNoCache (&$params)
+ *  395:     function removeExpiredPages (&$pObj)
+ *  420:     function rm ($dir)
  *
- * TOTAL FUNCTIONS: 6
+ * TOTAL FUNCTIONS: 8
  * (This index is automatically created/updated by the extension "extdeveval")
  *
+ */
+
+/**
+ * Static file cache extension
+ *
+ * @author	Michiel Roos <extensions@netcreators.com>
+ * @package TYPO3
+ * @subpackage tx_ncstaticfilecache
  */
 class tx_ncstaticfilecache {
 	var $extKey = 'nc_staticfilecache';
@@ -201,6 +211,20 @@ class tx_ncstaticfilecache {
 	}
 
 	/**
+	 * Returns records for a page id
+	 *
+	 * @param	integer		Page id
+	 * @return	array		Array of records
+	 */
+	function getRecordForPageID($pid)	{
+		return $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+					'*',
+					'tx_ncstaticfilecache_file',
+					'pid='.intval($pid)
+				);
+	}
+
+	/**
 	 * Detecting if shift-reload has been clicked. Will not be called if re-
 	 * generation of page happens by other reasons (for instance that the page
 	 * is not in cache yet!) Also, a backend user MUST be logged in for the
@@ -229,6 +253,7 @@ class tx_ncstaticfilecache {
 	 */
 	function insertPageIncache (&$pObj, &$timeOutTime) {
 		if ($this->debug)	t3lib_div::devlog("insertPageIncache", $this->extKey, 1);
+
 		$cacheDir = $this->cacheDir.t3lib_div::getIndpEnv('TYPO3_HOST_ONLY');
 		if (!strstr(t3lib_div::getIndpEnv('REQUEST_URI'), '?')
 		&& (substr(t3lib_div::getIndpEnv('REQUEST_URI'), -1, 1) == '/')) {
@@ -236,21 +261,33 @@ class tx_ncstaticfilecache {
 			$loginsDeniedCfg = !$pObj->config['config']['sendCacheHeaders_onlyWhenLoginDeniedInBranch'] || !$pObj->loginAllowedInBranch;
 			$doCache = $pObj->isStaticCacheble();
 
-			if ($this->debug)	{
-				if (!$pObj->page['tx_ncstaticfilecache_cache'])
-					t3lib_div::devlog("insertPageIncache: static cache disabled by user", $this->extKey, 1);
-				if ($pObj->no_cache)
-					t3lib_div::devlog("insertPageIncache: no_cache setting is true", $this->extKey, 1);
-				if ($pObj->isINTincScript())
-					t3lib_div::devlog("insertPageIncache: page has INTincScript", $this->extKey, 1);
-				if ($pObj->isEXTincScript())
-					t3lib_div::devlog("insertPageIncache: page has EXTincScript", $this->extKey, 1);
-				if ($pObj->isUserOrGroupSet())
-					t3lib_div::devlog("insertPageIncache: page has user or group set", $this->extKey, 1);
-				if ($pObj->doWorkspacePreview())
-					t3lib_div::devlog("insertPageIncache: workspace preview", $this->extKey, 1);
-				if (!$loginsDeniedCfg)
-					t3lib_div::devlog("insertPageIncache: loginsDeniedCfg is true", $this->extKey, 1);
+			if (!$pObj->page['tx_ncstaticfilecache_cache']) {
+				if ($this->debug)	t3lib_div::devlog("insertPageIncache: static cache disabled by user", $this->extKey, 1);
+				$explanation = "static cache disabled on page";
+			}
+			if ($pObj->no_cache) {
+				if ($this->debug)	t3lib_div::devlog("insertPageIncache: no_cache setting is true", $this->extKey, 1);
+				$explanation = "config.no_cache is true";
+			}
+			if ($pObj->isINTincScript()) {
+				if ($this->debug)	t3lib_div::devlog("insertPageIncache: page has INTincScript", $this->extKey, 1);
+				$explanation = "page has INTincScript";
+			}
+			if ($pObj->isEXTincScript()) {
+				if ($this->debug)	t3lib_div::devlog("insertPageIncache: page has EXTincScript", $this->extKey, 1);
+				$explanation = "page has EXTincScript";
+			}
+			if ($pObj->isUserOrGroupSet()) {
+				if ($this->debug)	t3lib_div::devlog("insertPageIncache: page has user or group set", $this->extKey, 1);
+				$explanation = "page has user or group set";
+			}
+			if ($pObj->doWorkspacePreview()) {
+				if ($this->debug)	t3lib_div::devlog("insertPageIncache: workspace preview", $this->extKey, 1);
+				$explanation = "workspace preview";
+							}
+			if (!$loginsDeniedCfg) {
+				if ($this->debug)	t3lib_div::devlog("insertPageIncache: loginsDeniedCfg is true", $this->extKey, 1);
+				$explanation = "loginsDeniedCfg is true";
 			}
 
 			// This is supposed to have "&& !$pObj->beUserLogin" in there as well
@@ -259,6 +296,7 @@ class tx_ncstaticfilecache {
 			&& $doCache
 			&& !$pObj->doWorkspacePreview()
 			&& $loginsDeniedCfg) {
+
 				$file = t3lib_div::getIndpEnv('REQUEST_URI').'index.html';
 				t3lib_div::mkdir_deep(PATH_site, $cacheDir.t3lib_div::getIndpEnv('REQUEST_URI'));
 
@@ -287,7 +325,7 @@ class tx_ncstaticfilecache {
 				$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
 					'uid',
 					$this->fileTable,
-					'pid='.$pObj->page['uid'].' AND file='.$GLOBALS['TYPO3_DB']->fullQuoteStr($file, $this->fileTable));
+					'pid='.$pObj->page['uid'].' AND host = '.$GLOBALS['TYPO3_DB']->fullQuoteStr(t3lib_div::getIndpEnv('TYPO3_HOST_ONLY'), $this->fileTable).' AND file='.$GLOBALS['TYPO3_DB']->fullQuoteStr($file, $this->fileTable));
 
 				if ($rows[0]['uid']) {
 					$fields_values['tstamp'] = $GLOBALS['EXEC_TIME'];
@@ -306,9 +344,44 @@ class tx_ncstaticfilecache {
 				}
 			}
 			else {
+				// Check for existing entries with the same uid and file, if a
+				// record exists, update timestamp, otherwise create a new record.
+				$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+					'uid',
+					$this->fileTable,
+					'pid='.$pObj->page['uid'].' AND host = '.$GLOBALS['TYPO3_DB']->fullQuoteStr(t3lib_div::getIndpEnv('TYPO3_HOST_ONLY'), $this->fileTable).' AND file='.$GLOBALS['TYPO3_DB']->fullQuoteStr(t3lib_div::getIndpEnv('REQUEST_URI'), $this->fileTable));
+
+				if ($rows[0]['uid']) {
+					$fields_values['explanation'] = $explanation;
+					$GLOBALS['TYPO3_DB']->exec_UPDATEquery($this->fileTable, 'uid='.$rows[0]['uid'], $fields_values);
+				} else {
+					$fields_values = array(
+						'explanation' => $explanation,
+						'file' => t3lib_div::getIndpEnv('REQUEST_URI'),
+						'pid' => $pObj->page['uid'],
+						'host' => t3lib_div::getIndpEnv('TYPO3_HOST_ONLY'),
+					);
+					$GLOBALS['TYPO3_DB']->exec_INSERTquery($this->fileTable, $fields_values);
+				}
+
 				if ($this->debug)	{
 					t3lib_div::devlog("insertPageIncache: . . . . so we're not caching this page!", $this->extKey, 1);
 				}
+			}
+		}
+	}
+
+	/**
+	 * Log cache miss if no_cache is true
+	 *
+	 * @param	object		$pObj: partent object
+	 * @return	void
+	 */
+	function logNoCache (&$params) {
+		if($params['pObj']) {
+			if($params['pObj']->no_cache) {
+				$timeOutTime = 0;
+				$this->insertPageInCache($params['pObj'], $timeOutTime);
 			}
 		}
 	}
@@ -333,7 +406,9 @@ class tx_ncstaticfilecache {
 				$this->clearStaticFile ($params);
 			}
 		}
-		$pObj->cli_echo("No expired pages found.\n");
+		else {
+			$pObj->cli_echo("No expired pages found.\n");
+		}
 	}
 
 	/**
@@ -352,7 +427,7 @@ class tx_ncstaticfilecache {
 	}
 }
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/nc_staticfilecache/lib/class.tx_ncstaticfilecache.php']) {
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/nc_staticfilecache/lib/class.tx_ncstaticfilecache.php']);
+if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/nc_staticfilecache/class.tx_ncstaticfilecache.php']) {
+	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/nc_staticfilecache/class.tx_ncstaticfilecache.php']);
 }
 ?>
