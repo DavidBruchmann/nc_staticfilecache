@@ -5,7 +5,7 @@
  */
 
 if (!defined('TYPO3_MODE')) {
-	die('Access denied.');
+    die('Access denied.');
 }
 
 // Register with "crawler" extension:
@@ -32,29 +32,40 @@ $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['clea
 
 // Set cookie when User logs in
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['initFEuser'][$_EXTKEY] = $hookNamespace . 'InitFrontendUser->setFeUserCookie';
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_userauth.php']['logoff_post_processing'][$_EXTKEY] = $hookNamespace . 'LogoffFrontendUser->logoff';
 
 // register command controller
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase']['commandControllers'][] = 'SFC\\NcStaticfilecache\\Command\\CacheCommandController';
 
 /** @var \TYPO3\CMS\Extbase\SignalSlot\Dispatcher $signalSlotDispatcher */
 $signalSlotDispatcher = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\SignalSlot\\Dispatcher');
-$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule', 'SFC\\NcStaticfilecache\\Cache\\Rule\\StaticCacheable', 'check');
-$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule', 'SFC\\NcStaticfilecache\\Cache\\Rule\\ValidUri', 'check');
-$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule', 'SFC\\NcStaticfilecache\\Cache\\Rule\\ValidDoktype', 'check');
-$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule', 'SFC\\NcStaticfilecache\\Cache\\Rule\\NoWorkspacePreview', 'check');
-$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule', 'SFC\\NcStaticfilecache\\Cache\\Rule\\NoUserOrGroupSet', 'check');
-$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule', 'SFC\\NcStaticfilecache\\Cache\\Rule\\NoIntScripts', 'check');
-$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule', 'SFC\\NcStaticfilecache\\Cache\\Rule\\LoginDeniedConfiguration', 'check');
-$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule', 'SFC\\NcStaticfilecache\\Cache\\Rule\\PageCacheable', 'check');
-$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule', 'SFC\\NcStaticfilecache\\Cache\\Rule\\NoNoCache', 'check');
-$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule', 'SFC\\NcStaticfilecache\\Cache\\Rule\\Enable', 'check');
+$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule',
+    'SFC\\NcStaticfilecache\\Cache\\Rule\\StaticCacheable', 'check');
+$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule',
+    'SFC\\NcStaticfilecache\\Cache\\Rule\\ValidUri', 'check');
+$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule',
+    'SFC\\NcStaticfilecache\\Cache\\Rule\\ValidDoktype', 'check');
+$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule',
+    'SFC\\NcStaticfilecache\\Cache\\Rule\\NoWorkspacePreview', 'check');
+$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule',
+    'SFC\\NcStaticfilecache\\Cache\\Rule\\NoUserOrGroupSet', 'check');
+$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule',
+    'SFC\\NcStaticfilecache\\Cache\\Rule\\NoIntScripts', 'check');
+$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule',
+    'SFC\\NcStaticfilecache\\Cache\\Rule\\LoginDeniedConfiguration', 'check');
+$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule',
+    'SFC\\NcStaticfilecache\\Cache\\Rule\\PageCacheable', 'check');
+$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule',
+    'SFC\\NcStaticfilecache\\Cache\\Rule\\NoNoCache', 'check');
+$signalSlotDispatcher->connect('SFC\\NcStaticfilecache\\StaticFileCache', 'cacheRule',
+    'SFC\\NcStaticfilecache\\Cache\\Rule\\Enable', 'check');
 
 // new Cache for Static file caches
-$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['static_file_cache'] = array(
-	'frontend' => 'SFC\\NcStaticfilecache\\Cache\\UriFrontend',
-	'backend'  => 'SFC\\NcStaticfilecache\\Cache\\StaticFileBackend',
-	'groups'   => array(
-		'pages',
-		'all'
-	),
-);
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['static_file_cache'] = [
+    'frontend' => 'SFC\\NcStaticfilecache\\Cache\\UriFrontend',
+    'backend' => 'SFC\\NcStaticfilecache\\Cache\\StaticFileBackend',
+    'groups' => [
+        'pages',
+        'all'
+    ],
+];

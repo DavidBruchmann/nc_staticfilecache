@@ -14,25 +14,33 @@ Here is a part of the gzip.realurl version:
 
    ### Begin: Static File Cache (preparation) ####
 
-   # Do not allow directl call the cache entries
-   RewriteCond %{REQUEST_URI} ^typo3temp/tx_ncstaticfilecache/.*
-   RewriteRule .* - [F,L]
+   # Document root configuration
+   RewriteRule .* - [E=SFC_ROOT:%{DOCUMENT_ROOT}]
+   # RewriteRule .* - [E=SFC_ROOT:%{DOCUMENT_ROOT}/t3site] # Example if your installation is installed in a directory
+
+   # Cleanup URI
+   RewriteCond %{REQUEST_URI} ^.*$
+   RewriteRule .* - [E=SFC_URI:/%{REQUEST_URI}]
+   RewriteCond %{REQUEST_URI} ^/.*$
+   RewriteRule .* - [E=SFC_URI:%{REQUEST_URI}]
+   RewriteCond %{REQUEST_URI} ^/?$
+   RewriteRule .* - [E=SFC_URI:/]
 
    # Get scheme/protocol
    RewriteCond %{SERVER_PORT} ^443$
-   RewriteRule .* - [E=TX_NCSTATICFILECACHE_PROTOCOL:https]
+   RewriteRule .* - [E=SFC_PROTOCOL:https]
    RewriteCond %{SERVER_PORT} !^443$
-   RewriteRule .* - [E=TX_NCSTATICFILECACHE_PROTOCOL:http]
+   RewriteRule .* - [E=SFC_PROTOCOL:http]
 
    # Set gzip extension into an environment variable if the visitors browser can handle gzipped content.
    RewriteCond %{HTTP:Accept-Encoding} gzip [NC]
-   RewriteRule .* - [E=TX_NCSTATICFILECACHE_GZIP:.gz]
-   #RewriteRule .* - [E=TX_NCSTATICFILECACHE_GZIP:] # Add this line, to disable the gzip redirect
+   RewriteRule .* - [E=SFC_GZIP:.gz]
+   #RewriteRule .* - [E=SFC_GZIP:] # Add this line, to disable the gzip redirect
 
    # Check if the requested file exists in the cache, otherwise default to index.html that
    # set in an environment variable that is used later on
-   RewriteCond %{DOCUMENT_ROOT}/typo3temp/tx_ncstaticfilecache/%{ENV:TX_NCSTATICFILECACHE_PROTOCOL}/%{HTTP_HOST}/%{REQUEST_URI} !-f
-   RewriteRule .* - [E=TX_NCSTATICFILECACHE_FILE:/index.html]
+   RewriteCond %{ENV:SFC_ROOT}/typo3temp/tx_ncstaticfilecache/%{ENV:SFC_PROTOCOL}/%{HTTP_HOST}%{ENV:SFC_URI} !-f
+   RewriteRule .* - [E=SFC_FILE:/index.html]
 
    ### Begin: Static File Cache (main) ####
 
@@ -40,7 +48,7 @@ Here is a part of the gzip.realurl version:
    RewriteCond %{QUERY_STRING} ^$
 
    # It only makes sense to do the other checks if a static file actually exists.
-   RewriteCond %{DOCUMENT_ROOT}/typo3temp/tx_ncstaticfilecache/%{ENV:TX_NCSTATICFILECACHE_PROTOCOL}/%{HTTP_HOST}/%{REQUEST_URI}%{ENV:TX_NCSTATICFILECACHE_FILE}%{ENV:TX_NCSTATICFILECACHE_GZIP} -f
+   RewriteCond %{ENV:SFC_ROOT}/typo3temp/tx_ncstaticfilecache/%{ENV:SFC_PROTOCOL}/%{HTTP_HOST}%{ENV:SFC_URI}%{ENV:SFC_FILE}%{ENV:SFC_GZIP} -f
 
    # NO frontend user is logged in. Logged in frontend users may see different
    # information than anonymous users. But the anonymous version is cached. So
@@ -53,8 +61,9 @@ Here is a part of the gzip.realurl version:
    # We only redirect GET requests
    RewriteCond %{REQUEST_METHOD} GET
 
-   # NO backend user is logged in. Please note that the be_typo_user cookie expires at the
-   # end of the browser session. If you have logged out of the TYPO3 backend and are expecting to see cached pages but don't. Please close this browser settion first or remove the cookie manually or use another browser to hit your frontend.
+   # NO backend user is logged in. Please note that the be_typo_user cookie expires at the end of the browser session.
+   # If you have logged out of the TYPO3 backend and are expecting to see cached pages but don't.
+   # Please close this browser session first or remove the cookie manually or use another browser to hit your frontend.
    RewriteCond %{HTTP_COOKIE} !be_typo_user [NC]
 
    # Check for Ctrl Shift reload
@@ -62,7 +71,12 @@ Here is a part of the gzip.realurl version:
    RewriteCond %{HTTP:Cache-Control} !no-cache
 
    # Rewrite the request to the static file.
-   RewriteRule .* typo3temp/tx_ncstaticfilecache/%{ENV:TX_NCSTATICFILECACHE_PROTOCOL}/%{HTTP_HOST}/%{REQUEST_URI}%{ENV:TX_NCSTATICFILECACHE_FILE}%{ENV:TX_NCSTATICFILECACHE_GZIP} [L]
+   RewriteRule .* typo3temp/tx_ncstaticfilecache/%{ENV:SFC_PROTOCOL}/%{HTTP_HOST}%{ENV:SFC_URI}%{ENV:SFC_FILE}%{ENV:SFC_GZIP} [L]
+
+   # Do not allow direct call the cache entries
+   RewriteCond %{ENV:SFC_URI} ^/typo3temp/tx_ncstaticfilecache/.*
+   RewriteCond %{ENV:REDIRECT_STATUS} ^$
+   RewriteRule .* - [F,L]
 
    ### Begin: Static File Cache (options) ####
 
@@ -100,12 +114,11 @@ If you use the oldschool .htaccess rewrite rules that come with the TYPO3 dummy,
    RewriteCond %{REQUEST_FILENAME} !-l
    RewriteRule .* index.php [L]
 
-If the TYPO3 Installation isn´t in your root directory (say your site lives in http://some.domain.com/t3site/), then you have to add the '/t3site' part to the configuration snippet. It must be placed right after %{DOCUMENT_ROOT}. Here are two lines of the ruleset to illustrate:
+If the TYPO3 Installation isn´t in your root directory (say your site lives in http://some.domain.com/t3site/), then you have to add the '/t3site' part to the configuration snippet. It must be placed right after %{DOCUMENT_ROOT}. Here is the line of the ruleset to illustrate:
 
 .. code-block:: bash
 
-   RewriteCond %{DOCUMENT_ROOT}/t3site/typo3temp/tx_ncstaticfilecache/%{ENV:TX_NCSTATICFILECACHE_PROTOCOL}/%{HTTP_HOST}/%{REQUEST_URI}%{ENV:TX_NCSTATICFILECACHE_FILE} -f
-   RewriteRule .* t3site/typo3temp/tx_ncstaticfilecache/%{ENV:TX_NCSTATICFILECACHE_PROTOCOL}/%{HTTP_HOST}/%{REQUEST_URI} [L]
+   RewriteRule .* - [E=SFC_ROOT:%{DOCUMENT_ROOT}/t3site]
 
 You are of course free to make the rules as complex as you like.
 

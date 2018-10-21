@@ -1,9 +1,35 @@
 ChangeLog
 ---------
 
+2015-12-28 Tim Lochmüller <tim@fruit-lab.de>
+
+- [BUGFIX] Fix the "Illegal link configuration." check
+- [BUGFIX] Fix the security rule to allow the redirect but disallow the direct access
+- [TASK] Format the htaccess file (one comment)
+- [TASK] Migrate Cookie related stuff to the CookieUtility
+- [TASK] Format the code  by PSR-2
+- [BUGFIX] There is no first parameter for the GeneralUtility::milliseconds function
+- [TASK] Convert array to short syntax (need PHP 5.4.x)
+- [BUGFIX] #70673 No static file after FE user logged out
+- [BUGFIX] #70994 Tree view in info module just one entry (TYPO3 7.x)
+- [BUGFIX] Fix the remove expired pages button
+- Add comment about the core bug
+- Prepare Release 3.5.0
+
+2015-09-09 Tim Lochmüller <tim@fruit-lab.de>
+
+- [BUGFIX] Fix the ValidUri Rule. Also check for "index.php" in the URI
+- Introduce REQUEST_URI wrapper in the htaccess file. Fix problem of empty URI #59182
+- Fix typo in the htaccess file
+- Streamline the htaccess configuration
+- Put the document root also in a env variable (.htaccess)
+- [BUGFIX] Fix the security rule
+- [BUGFIX] don't delete cache, when editor changes content in workspaces
+- [BUGFIX] Add one more rule check for the valid cache URI
+
 2015-08-20 Tim Lochmüller <tim@fruit-lab.de>
 
-- #68473 Fix compatiblity bug for 7.x
+- #68473 Fix compatibility bug for 7.x
 - Prepare Release 3.4.1
 
 2015-07-13 Tim Lochmüller <tim@fruit-lab.de>

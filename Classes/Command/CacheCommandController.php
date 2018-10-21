@@ -8,7 +8,6 @@
 
 namespace SFC\NcStaticfilecache\Command;
 
-use SFC\NcStaticfilecache\StaticFileCache;
 use SFC\NcStaticfilecache\Utility\CacheUtility;
 use TYPO3\CMS\Extbase\Mvc\Controller\CommandController;
 
@@ -17,13 +16,15 @@ use TYPO3\CMS\Extbase\Mvc\Controller\CommandController;
  *
  * @author Tim Lochmüller
  */
-class CacheCommandController extends CommandController {
+class CacheCommandController extends CommandController
+{
 
-	/**
-	 * Remove the expired pages
-	 */
-	public function removeExpiredPagesCommand() {
-		CacheUtility::getCache()
-			->collectGarbage();
-	}
+    /**
+     * Remove the expired pages
+     */
+    public function removeExpiredPagesCommand()
+    {
+        CacheUtility::getCache()
+            ->collectGarbage();
+    }
 }
