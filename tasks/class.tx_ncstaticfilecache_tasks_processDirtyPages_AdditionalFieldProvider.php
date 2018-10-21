@@ -27,7 +27,7 @@
  *
  * @author Michael Klapper <michael.klapper@aoemedia.de>
  * @copyright Copyright (c) 2009, AOE media GmbH <dev@aoemedia.de>
- * @version $Id: class.tx_ncstaticfilecache_tasks_processDirtyPages_AdditionalFieldProvider.php 76570 2013-06-14 18:28:11Z fab1en $
+ * @version $Id: class.tx_ncstaticfilecache_tasks_processDirtyPages_AdditionalFieldProvider.php 84493 2014-03-25 18:40:56Z spyker $
  * @date $Date$
  * @since 08.01.2010 - 11:00:44
  * @package TYPO3
@@ -78,11 +78,12 @@ class tx_ncstaticfilecache_tasks_processDirtyPages_AdditionalFieldProvider imple
 	 * @return	boolean					True if validation was ok (or selected class is not relevant), false otherwise
 	 */
 	public function validateAdditionalFields(array &$submittedData, tx_scheduler_Module $schedulerModule) {
-		$itemLimit = class_exists('TYPO3\CMS\Core\Utility\MathUtility')
-			? \TYPO3\CMS\Core\Utility\MathUtility::convertToPositiveInteger($submittedData['itemLimit'])
-			: t3lib_div::intval_positive($submittedData['itemLimit']);
 
-		if ($itemLimit  > 0) {
+		$itemLimit = class_exists('t3lib_utility_Math') ?
+			t3lib_utility_Math::convertToPositiveInteger($submittedData['itemLimit']) :
+			t3lib_div::intval_positive($submittedData['itemLimit']);
+
+		if ( $itemLimit > 0 ) {
 			return true;
 		} else {
 			$schedulerModule->addMessage('no valid limit given (positive number expected)', t3lib_FlashMessage::ERROR);

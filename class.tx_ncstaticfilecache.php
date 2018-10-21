@@ -298,7 +298,9 @@ class tx_ncstaticfilecache {
 				default:
 					$doClearCache = class_exists('TYPO3\CMS\Core\Utility\MathUtility')
 						? \TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($cacheCmd)
-						: t3lib_div::testInt($cacheCmd);
+						: (class_exists('t3lib_utility_Math') ? t3lib_utility_Math::canBeInterpretedAsInteger($cacheCmd) : t3lib_div::testInt($cacheCmd));
+
+
 
 					if ($doClearCache) {
 						$this->debug('clearing cache for pid: ' . $cacheCmd);
@@ -314,7 +316,7 @@ class tx_ncstaticfilecache {
 	/**
 	 * Returns records for a page id
 	 *
-	 * @param	integer		Page id
+	 * @param	integer	$pid	Page id
 	 * @return	array		Array of records
 	 */
 	public function getRecordForPageID($pid) {
@@ -401,7 +403,19 @@ class tx_ncstaticfilecache {
 				: t3lib_div::int_from_ver(TYPO3_version);
 			$workspacePreview = ($version >= 4000000 && $pObj->doWorkspacePreview());
 
-			$file = $uri . '/index.html';
+
+			// check the allowed file types
+			$basename = basename($uri);
+			$fileExtension = pathinfo($basename, PATHINFO_EXTENSION);
+			$fileTypes = explode(',', $this->configuration['fileTypes']);
+
+			$file = $uri;
+			if (!in_array($fileExtension, $fileTypes)) {
+				$file .= '/index.html';
+			} else {
+				$uri = dirname($uri);
+			}
+
 			$file = preg_replace('#//#', '/', $file);
 
 			// This is supposed to have "&& !$pObj->beUserLogin" in there as well
@@ -467,17 +481,26 @@ class tx_ncstaticfilecache {
 				}
 				if ($pObj->isINTincScript()) {
 					$this->debug('insertPageIncache: page has INTincScript', LOG_INFO);
-					$userFunc = array();
-					$includeLibs = array();
+
+					$INTincScripts = array();
 					foreach($pObj->config['INTincScript'] as $k => $v) {
-						$userFunc[] = $v['conf']['userFunc'];
-						$includeLibs[] = $v['conf']['includeLibs'];
+						$infos = array();
+						if(isset($v['type']))
+							$infos[] = 'type: '.$v['type'];
+						if(isset($v['conf']['userFunc']))
+							$infos[] = 'userFunc: '.$v['conf']['userFunc'];
+						if(isset($v['conf']['includeLibs']))
+							$infos[] = 'includeLibs: '.$v['conf']['includeLibs'];
+						if(isset($v['conf']['extensionName']))
+							$infos[] = 'extensionName: '.$v['conf']['extensionName'];
+						if(isset($v['conf']['pluginName']))
+							$infos[] = 'pluginName: '.$v['conf']['pluginName'];
+
+						$INTincScripts[] = implode(',', $infos);
 					}
-					$userFunc = array_unique($userFunc);
-					$includeLibs = array_unique($includeLibs);
-					$explanation = 'page has INTincScript: <ul><li>'.implode('</li><li>', $userFunc).''.implode('</li><li>', $includeLibs).'</li></ul>';
-					unset($includeLibs);
-					unset($userFunc);
+					$explanation = 'page has INTincScript: <ul><li>'.implode('</li><li>', $INTincScripts).'</li></ul>';
+					unset($INTincScripts);
+
 				}
 				if ($pObj->isUserOrGroupSet() && $this->isDebugEnabled) {
 					$this->debug('insertPageIncache: page has user or group set', LOG_INFO);
@@ -650,19 +673,18 @@ class tx_ncstaticfilecache {
 	 * @return	void
 	 */
 	public function setFeUserCookie(&$params, &$pObj) {
-		global $TYPO3_CONF_VARS;
-
+		$cookieDomain = NULL;
 			// Setting cookies
-		if ($TYPO3_CONF_VARS['SYS']['cookieDomain']) {
-			if ($TYPO3_CONF_VARS['SYS']['cookieDomain']{0} == '/')	{
-				$matchCnt = @preg_match($TYPO3_CONF_VARS['SYS']['cookieDomain'], t3lib_div::getIndpEnv('TYPO3_HOST_ONLY'), $match);
+		if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['cookieDomain']) {
+			if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['cookieDomain']{0} == '/')	{
+				$matchCnt = @preg_match($GLOBALS['TYPO3_CONF_VARS']['SYS']['cookieDomain'], t3lib_div::getIndpEnv('TYPO3_HOST_ONLY'), $match);
 				if ($matchCnt === FALSE)	{
 					t3lib_div::sysLog('The regular expression of $TYPO3_CONF_VARS[SYS][cookieDomain] contains errors. The session is not shared across sub-domains.', 'Core', 3);
 				} elseif ($matchCnt) {
 					$cookieDomain = $match[0];
 				}
 			} else {
-				$cookieDomain = $TYPO3_CONF_VARS['SYS']['cookieDomain'];
+				$cookieDomain = $GLOBALS['TYPO3_CONF_VARS']['SYS']['cookieDomain'];
 			}
 		}
 
@@ -691,20 +713,35 @@ class tx_ncstaticfilecache {
 		}
 	}
 
-
 	/**
 	 * Puts a message to the devlog.
 	 *
-	 * @param	string		$message: The message to log
-	 * @param	integer		$severity: The severity value from warning to fatal error (default: 1)
-	 * @return	void
+	 * @param string $message  The message to log
+	 * @param int    $severity The severity value from warning to fatal error (default: 1)
+	 * @param bool   $additionalData
+	 *
+	 * @return    void
 	 */
-	protected function debug($message, $severity = LOG_NOTICE, $additionalData = false) {
+	protected function debug($message, $severity = LOG_NOTICE, $additionalData = FALSE) {
 		if ($this->getConfigurationProperty('debug') || $severity <= LOG_CRIT) {
+
+			// map PHP or nc_staticfilecache error levels to
+			// t3lib_div::devLog() severity level
+			$arMapping = array(
+				LOG_EMERG   => 3,
+				LOG_ALERT   => 3,
+				LOG_CRIT    => 3,
+				LOG_ERR     => 3,
+				LOG_WARNING => 2,
+				LOG_NOTICE  => 1,
+				LOG_INFO    => -1,
+				LOG_DEBUG   => 0,
+			);
+
 			t3lib_div::devlog(
 				trim($message),
 				$this->extKey,
-				$severity,
+				isset($arMapping[$severity]) ? $arMapping[$severity] : 1,
 				$additionalData
 			);
 		}
@@ -903,11 +940,23 @@ class tx_ncstaticfilecache {
 		if ($this->getConfigurationProperty('sendCacheControlHeader')) {
 			$this->debug('writing .htaccess with timeout: ' . $timeOutSeconds, LOG_INFO);
 			$htaccess = $uri . '/.htaccess';
+
 			$htaccess = preg_replace('#//#', '/', $htaccess);
 			$htaccessContent = '<IfModule mod_expires.c>
 	ExpiresActive on
 	ExpiresByType text/html A' . $timeOutSeconds . '
+</IfModule>
+';
+			if($this->getConfigurationProperty('sendCacheControlHeaderRedirectAfterCacheTimeout')) {
+				$invalidTime = date("YmdHis", time()+(int)$timeOutSeconds);
+				$htaccessContent .= '
+				<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{TIME} >' . $invalidTime . '
+RewriteRule ^.*$ /index.php
 </IfModule>';
+			}
+
 			t3lib_div::writeFile(PATH_site . $cacheDir . $htaccess, $htaccessContent);
 		}
 	}
