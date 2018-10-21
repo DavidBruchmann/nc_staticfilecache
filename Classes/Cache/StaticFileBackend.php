@@ -2,13 +2,14 @@
 /**
  * Cache backend for static file cache
  *
- * @package NcStaticfilecache\Cache
+ * @package SFC\NcStaticfilecache\Cache
  * @author  Tim Lochmüller
  */
 
 namespace SFC\NcStaticfilecache\Cache;
 
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\PathUtility;
 use TYPO3\CMS\Fluid\View\StandaloneView;
 
 /**
@@ -42,17 +43,22 @@ class StaticFileBackend extends AbstractBackend {
 	 * @throws \TYPO3\CMS\Core\Cache\Exception\InvalidDataException if the data is not a string
 	 */
 	public function set($entryIdentifier, $data, array $tags = array(), $lifetime = NULL) {
+		$databaseData = array(
+			'created' => $GLOBALS['EXEC_TIME'],
+			'expires' => ($GLOBALS['EXEC_TIME'] + $this->getRealLifetime($lifetime)),
+		);
 		if (in_array('explanation', $tags)) {
-			parent::set($entryIdentifier, $data, $tags, $lifetime);
+			$databaseData['explanation'] = $data;
+			parent::set($entryIdentifier, serialize($databaseData), $tags, $lifetime);
 			return;
 		}
 
 		// call set in front of the generation, because the set method
 		// of the DB backend also call remove
-		parent::set($entryIdentifier, $GLOBALS['EXEC_TIME'] . '|' . ($GLOBALS['EXEC_TIME'] + $this->getRealLifetime($lifetime)), $tags, $lifetime);
+		parent::set($entryIdentifier, serialize($databaseData), $tags, $lifetime);
 
 		$fileName = $this->getCacheFilename($entryIdentifier);
-		$cacheDir = pathinfo($fileName, PATHINFO_DIRNAME);
+		$cacheDir = PathUtility::pathinfo($fileName, PATHINFO_DIRNAME);
 		if (!is_dir($cacheDir)) {
 			GeneralUtility::mkdir_deep($cacheDir);
 		}
@@ -80,7 +86,7 @@ class StaticFileBackend extends AbstractBackend {
 	 */
 	protected function writeHtAccessFile($originalFileName, $lifetime) {
 		if ($this->configuration->get('sendCacheControlHeader')) {
-			$fileName = pathinfo($originalFileName, PATHINFO_DIRNAME) . '/.htaccess';
+			$fileName = PathUtility::pathinfo($originalFileName, PATHINFO_DIRNAME) . '/.htaccess';
 			$accessTimeout = $this->configuration->get('htaccessTimeout');
 			$lifetime = $accessTimeout ? $accessTimeout : $this->getRealLifetime($lifetime);
 
@@ -108,9 +114,9 @@ class StaticFileBackend extends AbstractBackend {
 	protected function getCacheFilename($entryIdentifier) {
 		$urlParts = parse_url($entryIdentifier);
 		$cacheFilename = GeneralUtility::getFileAbsFileName($this->cacheDirectory . $urlParts['host'] . '/' . trim($urlParts['path'], '/'));
-		$fileExtension = pathinfo(basename($cacheFilename), PATHINFO_EXTENSION);
+		$fileExtension = PathUtility::pathinfo(basename($cacheFilename), PATHINFO_EXTENSION);
 		if (empty($fileExtension) || !GeneralUtility::inList($this->configuration->get('fileTypes'), $fileExtension)) {
-			$cacheFilename .= '/index.html';
+			$cacheFilename = rtrim($cacheFilename, '/') . '/index.html';
 		}
 		return $cacheFilename;
 	}
@@ -126,7 +132,7 @@ class StaticFileBackend extends AbstractBackend {
 		if (!$this->has($entryIdentifier)) {
 			return NULL;
 		}
-		return parent::get($entryIdentifier);
+		return unserialize(parent::get($entryIdentifier));
 	}
 
 	/**
@@ -167,7 +173,7 @@ class StaticFileBackend extends AbstractBackend {
 		$files = array(
 			$fileName,
 			$fileName . '.gz',
-			pathinfo($fileName, PATHINFO_DIRNAME) . '/.htaccess'
+			PathUtility::pathinfo($fileName, PATHINFO_DIRNAME) . '/.htaccess'
 		);
 		foreach ($files as $file) {
 			if (is_file($file)) {
@@ -199,10 +205,10 @@ class StaticFileBackend extends AbstractBackend {
 	 * @return void
 	 */
 	public function collectGarbage() {
-		$cacheEntryIdentifierRows = $this->getDatabaseConnection()
+		$cacheEntryIdentifiers = $this->getDatabaseConnection()
 			->exec_SELECTgetRows('DISTINCT identifier', $this->cacheTable, $this->expiredStatement);
 		parent::collectGarbage();
-		foreach ($cacheEntryIdentifierRows as $row) {
+		foreach ($cacheEntryIdentifiers as $row) {
 			$this->removeStaticFiles($row['identifier']);
 		}
 	}
@@ -217,7 +223,8 @@ class StaticFileBackend extends AbstractBackend {
 	public function flushByTag($tag) {
 		$identifiers = $this->findIdentifiersByTag($tag);
 		foreach ($identifiers as $identifier) {
-			$this->remove($identifier);
+			$this->removeStaticFiles($identifier);
 		}
+		parent::flushByTag($tag);
 	}
 }

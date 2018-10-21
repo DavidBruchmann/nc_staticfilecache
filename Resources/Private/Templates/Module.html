@@ -16,9 +16,58 @@
 		</tr>
 	</thead>
 	<tbody>
-		<f:for each="{rows}" as="row">
+		<f:for each="{rows}" as="cell">
 			<tr>
-				<f:format.raw>{row}</f:format.raw>
+				<f:if condition="{cell.info}">
+					<f:then>
+						<td nowrap="nowrap">
+							<f:format.raw>{cell.title}</f:format.raw>
+						</td>
+						<td>{cell.identifier}</td>
+						<td nowrap="nowrap">
+							<f:if condition="{cell.info.explanation -> f:count()}">
+								<f:then>
+									<f:be.buttons.icon icon="status-status-permission-denied" />
+								</f:then>
+								<f:else>
+									<f:format.date format="d-m-Y H:i">@{cell.info.created}</f:format.date>
+								</f:else>
+							</f:if>
+						</td>
+						<td nowrap="nowrap">
+							<f:if condition="{cell.info.explanation -> f:count()}">
+								<f:then>
+									<f:be.buttons.icon icon="status-status-permission-denied" />
+								</f:then>
+								<f:else>
+									<f:format.date format="d-m-Y H:i">@{cell.info.expires}</f:format.date>
+								</f:else>
+							</f:if>
+						</td>
+						<td nowrap="nowrap">
+							<f:if condition="{cell.info.explanation -> f:count()}">
+								<f:then>
+									<ul>
+										<f:for each="{cell.info.explanation}" as="explanation">
+											<li><f:format.crop maxCharacters="40" respectWordBoundaries="0" append="...{f:be.buttons.icon(icon:'status-dialog-information',title:'{explanation}')}">{explanation}</f:format.crop></li>
+										</f:for>
+									</ul>
+								</f:then>
+								<f:else>
+									<f:be.buttons.icon icon="status-status-permission-granted" />
+								</f:else>
+							</f:if>
+						</td>
+					</f:then>
+					<f:else>
+						<td nowrap="nowrap" colspan="4">
+							<f:format.raw>{cell.title}</f:format.raw>
+						</td>
+						<td>
+							<f:if condition="{cell.uid}"><span class="typo3-dimmed">not hit</span></f:if>
+						</td>
+					</f:else>
+				</f:if>
 			</tr>
 		</f:for>
 	</tbody>

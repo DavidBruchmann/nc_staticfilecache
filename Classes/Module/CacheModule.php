@@ -2,7 +2,7 @@
 /**
  * Static file cache info module
  *
- * @package NcStaticfilecache\Module
+ * @package SFC\NcStaticfilecache\Module
  * @author  Tim Lochmüller
  */
 
@@ -10,12 +10,11 @@ namespace SFC\NcStaticfilecache\Module;
 
 use SFC\NcStaticfilecache\Configuration;
 use SFC\NcStaticfilecache\StaticFileCache;
+use SFC\NcStaticfilecache\Utility\CacheUtility;
 use TYPO3\CMS\Backend\Module\AbstractFunctionModule;
 use TYPO3\CMS\Backend\Tree\View\BrowseTreeView;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Backend\Utility\IconUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Object\ObjectManager;
 use TYPO3\CMS\Fluid\View\StandaloneView;
 
 /**
@@ -34,13 +33,6 @@ class CacheModule extends AbstractFunctionModule {
 	protected $pageId = 0;
 
 	/**
-	 * Back path
-	 *
-	 * @var string
-	 */
-	protected $backPath = '';
-
-	/**
 	 * MAIN function for static publishing information
 	 *
 	 * @return    string        Output HTML for the module.
@@ -49,7 +41,6 @@ class CacheModule extends AbstractFunctionModule {
 		// Handle actions:
 		$this->handleActions();
 
-		$this->backPath = $GLOBALS['BACK_PATH'];
 		$this->pageId = intval($this->pObj->id);
 
 		// Initialize tree object:
@@ -84,10 +75,7 @@ class CacheModule extends AbstractFunctionModule {
 	 */
 	protected function renderModule(BrowseTreeView $tree) {
 		$rows = array();
-
-		/** @var \TYPO3\CMS\Core\Cache\CacheManager $cacheManager */
-		$cacheManager = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Cache\\CacheManager');
-		$cache = $cacheManager->getCache('static_file_cache');
+		$cache = CacheUtility::getCache();
 
 		foreach ($tree->tree as $row) {
 
@@ -96,36 +84,22 @@ class CacheModule extends AbstractFunctionModule {
 			if ($cacheEntries) {
 				$isFirst = TRUE;
 				foreach ($cacheEntries as $identifier => $info) {
-					$tCells = array();
+					$cell = array(
+						'uid'        => $row['row']['uid'],
+						'title'      => $isFirst ? $row['HTML'] . BackendUtility::getRecordTitle('pages', $row['row'], TRUE) : $row['HTML_depthData'],
+						'identifier' => $identifier,
+						'info'       => $info,
+					);
+					$isFirst = FALSE;
 
-					if ($isFirst) {
-						$tCells[] = '<td nowrap="nowrap">' . $row['HTML'] . BackendUtility::getRecordTitle('pages', $row['row'], TRUE) . '</td>';
-						$isFirst = FALSE;
-					} else {
-						$tCells[] = '<td nowrap="nowrap">' . $row['HTML_depthData'] . '</td>';
-					}
-
-					$tCells[] = '<td nowrap="nowrap">' . $identifier . '</td>';
-					if (strpos($info, '|')) {
-						$times = GeneralUtility::trimExplode('|', $info);
-						$tCells[] = '<td nowrap="nowrap">' . strftime('%d-%m-%y %H:%M', $times[0]) . '</td>';
-						$tCells[] = '<td nowrap="nowrap">' . strftime('%d-%m-%y %H:%M', $times[1]) . '</td>';
-						$tCells[] = '<td>' . IconUtility::getSpriteIcon('status-status-permission-granted') . '</td>';
-					} else {
-						$tCells[] = '<td nowrap="nowrap">' . IconUtility::getSpriteIcon('status-status-permission-denied') . '</td>';
-						$tCells[] = '<td nowrap="nowrap">' . IconUtility::getSpriteIcon('status-status-permission-denied') . '</td>';
-						$tCells[] = '<td>' . $info . '</td>';
-					}
-
-					$rows[] = implode('', $tCells);
+					$rows[] = $cell;
 				}
 			} else {
-				// empty entry
-				$tCells = array(
-					'<td nowrap="nowrap" colspan="4">' . $row['HTML'] . BackendUtility::getRecordTitle('pages', $row['row'], TRUE) . '</td>',
-					'<td><span class="typo3-dimmed">' . ($row['row']['uid'] == 0 ? '' : 'not hit') . '</span></td>',
+				$cell = array(
+					'uid'       => $row['row']['uid'],
+					'title'     => $row['HTML'] . BackendUtility::getRecordTitle('pages', $row['row'], TRUE),
 				);
-				$rows[] = implode('', $tCells);
+				$rows[] = $cell;
 			}
 		}
 
@@ -133,9 +107,9 @@ class CacheModule extends AbstractFunctionModule {
 		$renderer = GeneralUtility::makeInstance('TYPO3\\CMS\\Fluid\\View\\StandaloneView');
 		$renderer->setTemplatePathAndFilename(GeneralUtility::getFileAbsFileName('EXT:nc_staticfilecache/Resources/Private/Templates/Module.html'));
 		$renderer->assignMultiple(array(
-			'requestUri'   => GeneralUtility::getIndpEnv('REQUEST_URI'),
-			'rows'         => $rows,
-			'pageId'       => $this->pageId
+			'requestUri' => GeneralUtility::getIndpEnv('REQUEST_URI'),
+			'rows'       => $rows,
+			'pageId'     => $this->pageId
 		));
 
 		return $renderer->render();
@@ -150,11 +124,8 @@ class CacheModule extends AbstractFunctionModule {
 		$action = GeneralUtility::_GP('ACTION');
 
 		if (isset($action['removeExpiredPages'])) {
-			/** @var \TYPO3\CMS\Core\Cache\CacheManager $cacheManager */
-			$objectManager = new ObjectManager();
-			$cacheManager = $objectManager->get('TYPO3\\CMS\\Core\\Cache\\CacheManager');
-			$cache = $cacheManager->getCache('static_file_cache');
-			$cache->collectGarbage();
+			CacheUtility::getCache()
+				->collectGarbage();
 		}
 	}
 
@@ -170,6 +141,7 @@ class CacheModule extends AbstractFunctionModule {
 	 */
 	protected function processExpandCollapseLinks($content) {
 		if (strpos($content, 'PM=') !== FALSE && $this->pageId > 0) {
+
 			$content = preg_replace('/(href=")([^"]+PM=[^"#]+)(#[^"]+)?(")/', '${1}${2}&id=' . $this->pageId . '${3}${4}', $content);
 		}
 		return $content;

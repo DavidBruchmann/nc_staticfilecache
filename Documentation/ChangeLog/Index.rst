@@ -1,6 +1,57 @@
 ChangeLog
 ---------
 
+2015-05-08 Tim Lochmüller <tim@fruit-lab.de>
+
+- Prepare Release 3.3.1
+
+2015-05-05 Tim Lochmüller <tim@fruit-lab.de>
+
+- Fix #56519 Add notice about AddType in the .htaccess
+- Fix #66779 (partly) wrong empty Space in .htaccess template
+- Add lines of #58315 to the cookie hook, to check if a FE cookie already exists (disabled)
+- Remove the double .htaccess files, because realurl and simulateStaticDocuments use the same structure
+- Add one separate explanation for every single INT script in the page
+- Split up the Slot handling and the rule checking in the rules
+
+2015-05-04 Tim Lochmüller <tim@fruit-lab.de>
+
+- Prepare Release 3.3.0
+
+2015-04-30 Tim Lochmüller <tim@fruit-lab.de>
+
+- Enable clearCacheForAllDomains again
+- Set clearcacheonload to TRUE and set the Version compat to 6.2.x - 7.2.x
+- Migrate the last two caching rules
+- Move More backend module HTML to template file
+- Introduce the CacheUtility
+- Use the PathUtility to call pathinfo functions
+- Avoid double slash in the cache filename path
+- Add class information to the explanation
+- Remove all the HTML in the backend module class
+- Cache the meta information as serialized array
+- Code cleanups
+
+2015-04-28 Tim Lochmüller <tim@fruit-lab.de>
+
+- Move ClearCachePostProc.php to separate class
+- Move HeaderNoCache to separate class
+- Move the decision if the page is cachable to a rule based system (first two rules)
+- Fix documentation against http://docs.typo3.org/typo3cms/extensions/nc_staticfilecache/3.2.0/warnings.txt
+- Move the WorkspacePreview Rule to a separate class
+- Speed up the flushByTag function of the StaticFileBackend
+- Remove the overhead of the debugger. Code checks should be done via e.g. xDebug and not with inline code rubbish
+- Move the UserOrGroup Rule to a separate class
+- Move the NoIntScripts Rule to a separate class
+- Remove old ClearCacheProcessing variable and handling
+- Fix #66651 Missing %{TIME} in RewritCond for Cache-Control header
+- Move the LoginDeniedConfiguration Rule to a separate class
+- Move the PageCacheable Rule to a separate class
+- Replace Hooks with more modern Signals
+- Move the ValidProtocol Rule to a separate class
+- Move the setFeUserCookie Hook to separate class
+- Code cleanup and fix typos
+
 2015-04-28 Klaus Bitto <klaus@netcreators.nl>
 
 - Release of v3.2.0 to TER. Thanks to Tim Lochmüller for his extensive work.
