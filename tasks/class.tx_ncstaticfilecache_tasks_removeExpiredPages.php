@@ -29,7 +29,7 @@ require_once(t3lib_extMgm::extPath('nc_staticfilecache') . 'class.tx_ncstaticfil
  *
  * @author Michael Klapper <michael.klapper@aoemedia.de>
  * @copyright Copyright (c) 2009, AOE media GmbH <dev@aoemedia.de>
- * @version $Id: class.tx_ncstaticfilecache_tasks_removeExpiredPages.php 37816 2010-09-08 12:16:58Z ohader $
+ * @version $Id: class.tx_ncstaticfilecache_tasks_removeExpiredPages.php 76570 2013-06-14 18:28:11Z fab1en $
  * @date $Date$
  * @since 08.01.2010 - 11:00:44
  * @package TYPO3
@@ -46,7 +46,7 @@ class tx_ncstaticfilecache_tasks_removeExpiredPages extends tx_scheduler_Task {
 	 * Should return true on successful execution, false on error.
 	 *
 	 * @access public
-	 * @return boolean	Returns true on successful execution, false on error 
+	 * @return boolean	Returns true on successful execution, false on error
 	 *
 	 * @author Michael Klapper <michael.klapper@aoemedia.de>
 	 */

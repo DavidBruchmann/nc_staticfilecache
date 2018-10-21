@@ -19,7 +19,7 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  This copyright notice MUST APPEAR in all copies of the script! 
+ *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
 /**
@@ -27,7 +27,7 @@
  *
  * @author Michael Klapper <michael.klapper@aoemedia.de>
  * @copyright Copyright (c) 2009, AOE media GmbH <dev@aoemedia.de>
- * @version $Id: class.tx_ncstaticfilecache_tasks_processDirtyPages_AdditionalFieldProvider.php 37816 2010-09-08 12:16:58Z ohader $
+ * @version $Id: class.tx_ncstaticfilecache_tasks_processDirtyPages_AdditionalFieldProvider.php 76570 2013-06-14 18:28:11Z fab1en $
  * @date $Date$
  * @since 08.01.2010 - 11:00:44
  * @package TYPO3
@@ -56,7 +56,7 @@ class tx_ncstaticfilecache_tasks_processDirtyPages_AdditionalFieldProvider imple
 
 		if (empty($taskInfo['itemLimit'])) {
                         if ($schedulerModule->CMD == 'add') {
-                                $taskInfo['itemLimit'] = 0;                       
+                                $taskInfo['itemLimit'] = 0;
                         } else {
                                 $taskInfo['itemLimit'] = $task->itemLimit;
                         }

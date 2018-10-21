@@ -27,7 +27,7 @@
  *
  * @author Michael Klapper <michael.klapper@aoemedia.de>
  * @copyright Copyright (c) 2009, AOE media GmbH <dev@aoemedia.de>
- * @version $Id: class.tx_ncstaticfilecache_tasks_removeExpiredPages_AdditionalFieldProvider.php 37816 2010-09-08 12:16:58Z ohader $
+ * @version $Id: class.tx_ncstaticfilecache_tasks_removeExpiredPages_AdditionalFieldProvider.php 76570 2013-06-14 18:28:11Z fab1en $
  * @date $Date$
  * @since 08.01.2010 - 11:00:44
  * @package TYPO3
@@ -70,7 +70,7 @@ class tx_ncstaticfilecache_tasks_removeExpiredPages_AdditionalFieldProvider {
 	 * Takes care of saving the additional fields' values in the task's object
 	 *
 	 * @param	array					An array containing the data submitted by the add/edit task form
-	 * @param	tx_scheduler_Module		Reference to the scheduler backend module 
+	 * @param	tx_scheduler_Module		Reference to the scheduler backend module
 	 * @return	void
 	 */
 	public function saveAdditionalFields(array $submittedData, tx_scheduler_Task $task) {

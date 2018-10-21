@@ -1,7 +1,7 @@
 #
 # Table structure for table 'pages'
 #
-CREATE TABLE pages (  
+CREATE TABLE pages (
 	tx_ncstaticfilecache_cache tinyint(1) DEFAULT '1',
 );
 
@@ -24,4 +24,5 @@ CREATE TABLE tx_ncstaticfilecache_file (
 	additionalhash varchar(40) DEFAULT '' NOT NULL,
 
 	PRIMARY KEY (uid),
+	KEY pid (pid),
 ) ENGINE=InnoDB;

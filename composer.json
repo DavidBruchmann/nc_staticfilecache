@@ -32,6 +32,6 @@
 		"wdb/nc_staticfilecache": "self.version"
 	},
     "suggest": {
-        "typo3/cms": "4.2.15"
+        "typo3/cms": ">=4.2.11,<=6.1.99"
     }
 }
