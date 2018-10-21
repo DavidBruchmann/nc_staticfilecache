@@ -18,6 +18,22 @@ To install via composer use:
 composer require wdb/nc_staticfilecache
 ```
 
+The original `README` file is available as `README.txt`  
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+
+Undocumented configuration
+--------------------------
+
+1) Frontend TypoScript  
+
+	Property: tx_ncstaticfilecache.disableCache  
+	Data type: boolean  
+	Description: By setting this to a true value, the current page and page branch will not be cached statically.  
+	Example: tx_ncstaticfilecache.disableCache = 1  
+
+Versions
+--------
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
 3.6.0 / stable  
 March 23, 2016	
