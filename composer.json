@@ -33,5 +33,10 @@
 	},
     "require": {
         "typo3/cms-core": ">=8.7.0,<=8.7.99"
+    },
+    "autoload": {
+        "psr-4": {
+            "SFC\\NcStaticfilecache\\": "Classes"
+        }
     }
 }
